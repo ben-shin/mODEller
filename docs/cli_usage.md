@@ -130,6 +130,19 @@ Config example:
 
 Output folder has fitted params, init conditions, stats, diagnostics, residuals, simulated curves, model text, and generated ODEs.
 
+# Amyloid aggregation fitting
+
+Run the built-in amyloid aggregation workflow from a JSON config:
+
+```bash
+python -m odefit.cli fit-amyloid-aggregation \
+  --config examples/configs/amyloid_aggregation_config.json
+```
+
+This supports multiple total-concentration conditions, shared kinetic
+parameters, optional per-condition amplitudes, LSODA integration, and log
+residuals. See `docs/amyloid_aggregation_workflow.md`.
+
 # Run multistart fitting
 Multistart fitting runs the same model fit from different starting param guesses.
 

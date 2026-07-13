@@ -11,6 +11,9 @@ from odefit.data.dataset import Dataset
 from odefit.data.peak_filtering import build_peak_filtering_table
 from odefit.export.bundle_export import export_fit_bundle
 from odefit.fitting.fit_settings import FitSettings
+from odefit.fitting.amyloid_aggregation import (
+    fit_amyloid_aggregation_from_config,
+)
 from odefit.fitting.global_observable_model_comparison import (
     build_model_specs_from_texts,
     export_global_observable_model_comparison,
@@ -882,6 +885,38 @@ def command_benchmark_performance(args: argparse.Namespace) -> None:
         print(f"  {result.name}: {result.elapsed_seconds:.4f} s {result.metadata}")
 
     print(f"\nWrote benchmark table to: {table_path}")
+
+
+def command_fit_amyloid_aggregation(args: argparse.Namespace) -> None:
+    """
+    Fit the built-in amyloid aggregation multi-condition workflow.
+    """
+
+    config = load_fit_config(args.config)
+
+    if args.output_dir is not None:
+        config["output_dir"] = args.output_dir
+
+    output = fit_amyloid_aggregation_from_config(config)
+    result = output["result"]
+
+    print("Amyloid aggregation fit success:", result.success)
+    print("Message:", result.message)
+
+    print("\nFitted parameters:")
+    for name, value in result.fitted_parameters.items():
+        print(f"  {name}: {value:.8g}")
+
+    print("\nFit statistics:")
+    for name, value in result.statistics.items():
+        print(f"  {name}: {value}")
+
+    written_files = output.get("written_files", {})
+
+    if written_files:
+        print("\nWrote outputs:")
+        for name, path in written_files.items():
+            print(f"  {name}: {path}")
 
 
 def get_peak_filtering_settings(
@@ -5339,6 +5374,25 @@ def build_parser() -> argparse.ArgumentParser:
     )
 
     fit_parser.set_defaults(func=command_fit)
+
+    amyloid_parser = subparsers.add_parser(
+        "fit-amyloid-aggregation",
+        help="Fit the built-in amyloid aggregation model across conditions.",
+    )
+
+    amyloid_parser.add_argument(
+        "--config",
+        required=True,
+        help="Path to JSON amyloid aggregation fit config.",
+    )
+
+    amyloid_parser.add_argument(
+        "--output-dir",
+        default=None,
+        help="Optional output directory overriding config output_dir.",
+    )
+
+    amyloid_parser.set_defaults(func=command_fit_amyloid_aggregation)
 
     multistart_parser = subparsers.add_parser(
         "multistart",

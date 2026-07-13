@@ -1,6 +1,7 @@
 from odefit.api.backend import (
     bootstrap_global_observables_from_config,
     compare_global_observables_from_config,
+    fit_amyloid_aggregation_from_config,
     fit_global_observables_from_config,
     parse_model_text,
     profile_likelihood_global_observables_from_config,

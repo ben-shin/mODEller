@@ -239,7 +239,7 @@ def backend_output_payload(
 ) -> dict[str, Any]:
     result = output["result"]
 
-    if workflow == "fit":
+    if workflow in {"fit", "amyloid_aggregation"}:
         result_payload = fit_result_payload(result, max_rows=max_rows)
     elif workflow == "model_comparison":
         result_payload = model_comparison_payload(result, max_rows=max_rows)
@@ -252,7 +252,7 @@ def backend_output_payload(
     else:
         raise ValueError(f"Unknown workflow type: {workflow}")
 
-    return {
+    payload = {
         "workflow": workflow,
         "result": result_payload,
         "dataset": dataset_payload(
@@ -265,3 +265,11 @@ def backend_output_payload(
             output.get("filtering_result"),
         ),
     }
+
+    if "conditions" in output:
+        payload["conditions"] = _json_safe_value(output["conditions"])
+
+    if "written_files" in output:
+        payload["written_files"] = _json_safe_value(output["written_files"])
+
+    return payload

@@ -1,0 +1,75 @@
+{
+  "conditions": [
+    {
+      "name": "400uM",
+      "mtot": 0.0004,
+      "timepoints": [0, 10, 20, 40, 60, 80],
+      "observed": [1.0, 0.96, 0.88, 0.65, 0.38, 0.22],
+      "amplitude_parameter": "A400",
+      "fit": true
+    },
+    {
+      "name": "200uM",
+      "mtot": 0.0002,
+      "timepoints": [0, 10, 20, 40, 60, 80],
+      "observed": [1.0, 0.99, 0.95, 0.78, 0.52, 0.31],
+      "amplitude_parameter": "A200",
+      "fit": true
+    }
+  ],
+  "parameters": {
+    "log_kn": {
+      "initial_guess": 4,
+      "lower_bound": -12,
+      "upper_bound": 12
+    },
+    "log_k2": {
+      "initial_guess": 2,
+      "lower_bound": -12,
+      "upper_bound": 8
+    },
+    "log_ke": {
+      "initial_guess": 4,
+      "lower_bound": -12,
+      "upper_bound": 8
+    },
+    "nc": {
+      "initial_guess": 2,
+      "lower_bound": 1,
+      "upper_bound": 5
+    },
+    "n2": {
+      "value": 1,
+      "mode": "fixed",
+      "lower_bound": 1,
+      "upper_bound": 4
+    },
+    "cm": {
+      "initial_guess": 0.000035,
+      "lower_bound": 0.000005,
+      "upper_bound": 0.00005
+    }
+  },
+  "amplitudes": {
+    "A400": {
+      "value": 1,
+      "mode": "fixed",
+      "lower_bound": 0.5,
+      "upper_bound": 1.5
+    },
+    "A200": {
+      "value": 1,
+      "mode": "fixed",
+      "lower_bound": 0.5,
+      "upper_bound": 1.5
+    }
+  },
+  "residual_mode": "log",
+  "solver_method": "LSODA",
+  "method": "trf",
+  "loss": "linear",
+  "max_nfev": 10000,
+  "rtol": 0.000001,
+  "atol": 0.000000001,
+  "output_dir": "examples/configs/outputs/amyloid_aggregation"
+}

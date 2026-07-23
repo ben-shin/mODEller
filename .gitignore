@@ -40,3 +40,6 @@ exports/
 
 # Logs
 *.log
+
+# Windows download metadata
+*:Zone.Identifier

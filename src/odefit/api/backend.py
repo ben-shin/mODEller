@@ -49,6 +49,9 @@ from odefit.engines.registry import (
     describe_available_engines,
     get_engine_bundle,
 )
+from odefit.fitting.amyloid_aggregation import (
+    fit_amyloid_aggregation_from_config as _fit_amyloid_aggregation_from_config,
+)
 
 def parse_model_text(
     model_text: str,
@@ -95,6 +98,22 @@ def simulate_from_text(
         dataframe[species] = result.get_species_values(species)
 
     return dataframe
+
+
+def fit_amyloid_aggregation_from_config(
+    config_or_path: dict | str | Path,
+):
+    """
+    Fit the built-in amyloid aggregation workflow from a config dictionary/path.
+
+    This supports the legacy apo aggregation script pattern:
+    multiple total-concentration conditions, shared kinetic parameters, optional
+    per-condition amplitude parameters, LSODA integration, and log residuals.
+    """
+
+    config = _load_config(config_or_path)
+
+    return _fit_amyloid_aggregation_from_config(config)
 
 
 def _load_config(config_or_path: dict | str | Path) -> dict:

@@ -10,6 +10,7 @@ The GUI should treat these functions as the main backend contract.
 from odefit.api.backend import (
     parse_model_text,
     simulate_from_text,
+    fit_amyloid_aggregation_from_config,
     fit_global_observables_from_config,
     compare_global_observables_from_config,
     bootstrap_global_observables_from_config,
@@ -131,6 +132,30 @@ simulation = simulate_from_text(
 ### GUI usage
 
 Use this for quick model preview, the simulation panel, validating parameter values, and plotting timecourses before fitting.
+
+## Amyloid aggregation fitting
+
+The built-in amyloid aggregation workflow is available through:
+
+```python
+from odefit.api.backend import fit_amyloid_aggregation_from_config
+
+output = fit_amyloid_aggregation_from_config(
+    "examples/configs/amyloid_aggregation_config.json"
+)
+```
+
+Serialize it for GUI use with:
+
+```python
+payload = backend_output_payload(
+    output,
+    workflow="amyloid_aggregation",
+    max_rows=20,
+)
+```
+
+See `docs/amyloid_aggregation_workflow.md` for the config format.
 
 ## 3. Fit global observables from config
 

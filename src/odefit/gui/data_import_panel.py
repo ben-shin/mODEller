@@ -2,7 +2,7 @@ import pandas as pd
 from pathlib import Path
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel,
-    QFileDialog, QComboBox, QListWidget, QListWidgetItem,
+    QFileDialog, QListWidget, QListWidgetItem,
     QMessageBox, QAbstractItemView, QGroupBox
 )
 from PySide6.QtCore import Signal
@@ -11,13 +11,12 @@ from odefit.data.csv_reader import read_csv_dataset
 
 
 class DataImportPanel(QWidget):
-    # This now broadcasts a DICTIONARY of datasets! e.g., {"Exp1": Dataset, "Exp2": Dataset}
     datasets_updated = Signal(dict)
 
     def __init__(self):
         super().__init__()
         self.current_filepath = None
-        self.loaded_datasets = {}  # Our new Workspace memory!
+        self.loaded_datasets = {}  
         self._setup_ui()
 
     def _setup_ui(self):
@@ -37,11 +36,13 @@ class DataImportPanel(QWidget):
         import_layout.addLayout(file_layout)
 
         mapping_layout = QHBoxLayout()
-        time_layout = QHBoxLayout()
+        
+        # Replaced brittle QComboBox with a bulletproof QListWidget
+        time_layout = QVBoxLayout()
         time_layout.addWidget(QLabel("Time Column:"))
-        self.combo_time = QComboBox()
-        time_layout.addWidget(self.combo_time)
-        time_layout.addStretch()
+        self.list_time = QListWidget()
+        self.list_time.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
+        time_layout.addWidget(self.list_time)
         mapping_layout.addLayout(time_layout)
 
         signal_layout = QVBoxLayout()
@@ -90,10 +91,11 @@ class DataImportPanel(QWidget):
             assert isinstance(df_preview, pd.DataFrame)
             columns = df_preview.columns.tolist()
 
-            self.combo_time.clear()
+            self.list_time.clear()
             self.list_signals.clear()
-            self.combo_time.addItems(columns)
+            
             for col in columns:
+                self.list_time.addItem(QListWidgetItem(col))
                 self.list_signals.addItem(QListWidgetItem(col))
 
             self.btn_load.setEnabled(True)
@@ -101,30 +103,30 @@ class DataImportPanel(QWidget):
             QMessageBox.critical(self, "Error", f"Failed to read CSV:\n{str(e)}")
 
     def _on_load_clicked(self):
-        time_col = self.combo_time.currentText()
+        time_items = self.list_time.selectedItems()
         selected_items = self.list_signals.selectedItems()
-        signal_cols = [item.text() for item in selected_items]
 
-        if not signal_cols:
+        if not time_items:
+            QMessageBox.warning(self, "Warning", "Please select exactly one Time column.")
+            return
+
+        if not selected_items:
             QMessageBox.warning(self, "Warning", "Please select at least one Variable column.")
             return
 
+        time_col = time_items[0].text()
+        signal_cols = [item.text() for item in selected_items]
+
         try:
             dataset = read_csv_dataset(self.current_filepath, time_col, signal_cols)
-
-            # Use the filename as the dataset's unique name
             dataset_name = Path(self.current_filepath).name
 
-            # Add to our dictionary and UI list
             self.loaded_datasets[dataset_name] = dataset
 
-            # Refresh the UI list
             self.list_loaded_datasets.clear()
             self.list_loaded_datasets.addItems(list(self.loaded_datasets.keys()))
 
-            # Broadcast the ENTIRE dictionary to the rest of the app
             self.datasets_updated.emit(self.loaded_datasets)
-
             QMessageBox.information(self, "Success", f"Added '{dataset_name}' to workspace!")
 
         except Exception as e:

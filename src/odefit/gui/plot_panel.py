@@ -3,7 +3,6 @@ from PySide6.QtWidgets import (
 )
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 
-# Import Ben's plotting function and settings!
 from odefit.plotting.timecourse_plots import plot_dataset_timecourse, plot_variable_comparison
 from odefit.plotting.plot_settings import PlotSettings
 
@@ -17,6 +16,7 @@ class PlotPanel(QWidget):
         self.current_canvas = None
 
         self.datasets = {}
+        self.fit_results = {}  # Memory bank for successful fits!
         self.all_unique_variables = []
 
         self._setup_ui()
@@ -72,6 +72,14 @@ class PlotPanel(QWidget):
 
         self._refresh_dropdown()
 
+    def register_fit_result(self, dataset_name, fit_result):
+        """Saves a successful fit to memory and forces a redraw if it's currently on screen."""
+        self.fit_results[dataset_name] = fit_result
+        
+        # If the user is currently looking at this dataset, redraw it instantly!
+        if self.radio_dataset.isChecked() and self.combo_selection.currentText() == dataset_name:
+            self._draw_selected_plot(dataset_name)
+
     def _refresh_dropdown(self):
         """Updates the dropdown options based on the chosen Mode."""
         self.combo_selection.blockSignals(True)
@@ -119,11 +127,38 @@ class PlotPanel(QWidget):
                 x_label=dataset.time_column,
                 y_label="Concentration"
             )
-            fig, _ = plot_dataset_timecourse(dataset=dataset, settings=settings)
+            
+            # 1. Get the raw figure
+            fig, ax_objects = plot_dataset_timecourse(dataset=dataset, settings=settings)
+            
+            # 2. OVERLAY THE FIT (If we have one saved in memory!)
+            if selection in self.fit_results:
+                fit_result = self.fit_results[selection]
+                
+                # Get the current active Matplotlib Axis to draw on
+                ax = fig.gca() 
+                
+                try:
+                    # PERFECTLY MATCHED TO optimizer.py
+                    timepoints = fit_result.simulation_result.timepoints 
+                    
+                    for species_name in dataset.signal_columns:
+                        # Make sure the simulated species actually exists in the result
+                        if species_name in fit_result.simulation_result.species:
+                            # Extract the y-values using Ben's SimulationResult method
+                            simulated_values = fit_result.simulation_result.get_species_values(species_name)
+                            
+                            # Draw a thick, smooth line for the mathematical model over the scatter data
+                            ax.plot(timepoints, simulated_values, '-', linewidth=2.5, 
+                                    label=f"{species_name} (Fit)")
+                            
+                    ax.legend()
+                except AttributeError as e:
+                    # Failsafe just in case something goes wrong
+                    print(f"Could not draw overlay: {e}")
 
         else:
             # MODE 2: Overlay a single Variable across all Datasets
-            # We pass the ENTIRE dictionary of datasets here!
             settings = PlotSettings(
                 title=f"Comparing '{selection}' across Workspace",
                 x_label="Time",
